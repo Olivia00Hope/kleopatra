@@ -59,6 +59,7 @@
 
 #include <Libkleo/Algorithm>
 #include <Libkleo/Formatting>
+#include <Libkleo/GnuPG>
 #include <Libkleo/KeyCache>
 #include <Libkleo/KeyListModel>
 
@@ -343,7 +344,9 @@ void KeyListController::createActions(KActionCollection *coll)
         {
             "file_export_certificates_to_server",
             i18n("Publish on Server..."),
-            i18n("Publish the selected certificate (public key) on a public keyserver"),
+            keyserver().startsWith(QStringLiteral("ldap:")) || keyserver().startsWith(QStringLiteral("ldaps:"))
+                ? i18n("Publish the selected certificate (public key) to internal directory")
+                : i18n("Publish the selected certificate (public key) on %1", keyserver()),
             "view-certificate-export-server",
             nullptr,
             nullptr,
@@ -381,7 +384,9 @@ void KeyListController::createActions(KActionCollection *coll)
         {
             "file_lookup_certificates",
             i18n("Lookup on Server..."),
-            i18n("Search for certificates online using a public keyserver"),
+            keyserver().startsWith(QStringLiteral("ldap:")) || keyserver().startsWith(QStringLiteral("ldaps:"))
+                ? i18n("Search for certificates in internal directory")
+                : i18n("Search for certificates on %1", keyserver()),
             "edit-find",
             nullptr,
             nullptr,
