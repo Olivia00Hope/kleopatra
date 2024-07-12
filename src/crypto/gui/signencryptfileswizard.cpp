@@ -150,7 +150,6 @@ public:
         }
         mWidget->setSignAsText(i18nc("@option:check on SignEncryptPage", "&Sign as:"));
         mWidget->setEncryptForMeText(i18nc("@option:check on SignEncryptPage", "Encrypt for &me:"));
-        mWidget->setEncryptForOthersText(i18nc("@option:check on SignEncryptPage", "Encrypt for &others:"));
         mWidget->setEncryptWithPasswordText(
             i18nc("@option:check on SignEncryptPage", "Encrypt with &password. Anyone you share the password with can read the data."));
         vLay->addWidget(mWidget);

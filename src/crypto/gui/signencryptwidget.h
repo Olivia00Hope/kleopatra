@@ -42,7 +42,6 @@ public:
      *  as shortcut key. */
     void setSignAsText(const QString &text);
     void setEncryptForMeText(const QString &text);
-    void setEncryptForOthersText(const QString &text);
     void setEncryptWithPasswordText(const QString &text);
 
     /** Returns the list of recipients selected in the dialog
