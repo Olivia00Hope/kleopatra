@@ -56,8 +56,8 @@ NetKeyWidget::NetKeyWidget(QWidget *parent)
 
     mContentLayout->addWidget(new KSeparator(Qt::Horizontal));
 
-    mCardKeysView = new CardKeysView{this};
-    mContentLayout->addWidget(mCardKeysView);
+    mCardKeysView = new CardKeysView{this, CardKeysView::NoCreated};
+    mContentLayout->addWidget(mCardKeysView, 1);
 
     // The action area
     mContentLayout->addWidget(new KSeparator(Qt::Horizontal));
@@ -101,7 +101,6 @@ NetKeyWidget::NetKeyWidget(QWidget *parent)
     actionLayout->addStretch(1);
 
     mContentLayout->addLayout(actionLayout);
-    mContentLayout->addStretch(1);
 }
 
 NetKeyWidget::~NetKeyWidget() = default;

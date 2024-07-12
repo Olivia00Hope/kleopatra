@@ -52,26 +52,9 @@ P15CardWidget::P15CardWidget(QWidget *parent)
     mStatusLabel->setVisible(false);
     mContentLayout->addWidget(mStatusLabel);
 
-    mContentLayout->addWidget(new KSeparator(Qt::Horizontal));
-
-    mOpenPGPKeysSection = new QWidget{this};
-    {
-        auto l = new QVBoxLayout{mOpenPGPKeysSection};
-        l->setContentsMargins(0, 0, 0, 0);
-        l->addWidget(new QLabel(QStringLiteral("<b>%1</b>").arg(i18n("OpenPGP keys:"))));
-        mOpenPGPKeysWidget = new OpenPGPKeyCardWidget{this};
-        mOpenPGPKeysWidget->setAllowedActions(OpenPGPKeyCardWidget::NoAction);
-        l->addWidget(mOpenPGPKeysWidget);
-        l->addWidget(new KSeparator(Qt::Horizontal));
-    }
-    mOpenPGPKeysSection->setVisible(false);
-    mContentLayout->addWidget(mOpenPGPKeysSection);
-
-    mCardKeysView = new CardKeysView{this};
+    mCardKeysView = new CardKeysView{this, CardKeysView::NoCreated};
     mCardKeysView->setVisible(false);
     mContentLayout->addWidget(mCardKeysView);
-
-    mContentLayout->addStretch(1);
 }
 
 P15CardWidget::~P15CardWidget() = default;
@@ -84,15 +67,10 @@ void P15CardWidget::searchPGPFpr(const std::string &fpr)
     if (!Settings().alwaysSearchCardOnKeyserver() && !Kleo::keyserver().startsWith(QLatin1StringView{"ldap"})) {
         return;
     }
-    mStatusLabel->setText(i18n("Searching in directory service..."));
+    mStatusLabel->setText(i18n("Searching in directory service...")); // FIXME: use overlay widget of CardKeysView
     mStatusLabel->setVisible(true);
     qCDebug(KLEOPATRA_LOG) << "Looking for:" << fpr.c_str() << "on ldap server";
     QGpgME::KeyListJob *job = QGpgME::openpgp()->keyListJob(true);
-    connect(KeyCache::instance().get(), &KeyCache::keysMayHaveChanged, this, [this, fpr]() {
-        qCDebug(KLEOPATRA_LOG) << "Updating key info after changes";
-        ReaderStatus::mutableInstance()->updateStatus();
-        mOpenPGPKeysWidget->update(nullptr);
-    });
     connect(job, &QGpgME::KeyListJob::result, job, [this](GpgME::KeyListResult, std::vector<GpgME::Key> keys, QString, GpgME::Error) {
         if (keys.size() == 1) {
             auto importJob = QGpgME::openpgp()->importFromKeyserverJob();
@@ -130,13 +108,6 @@ void P15CardWidget::setCard(const P15Card *card)
         } else {
             mStatusLabel->setVisible(false);
         }
-    }
-
-    const bool cardHasOpenPGPKeys = (!card->keyFingerprint(OpenPGPCard::pgpSigKeyRef()).empty() //
-                                     || !card->keyFingerprint(OpenPGPCard::pgpEncKeyRef()).empty());
-    mOpenPGPKeysSection->setVisible(cardHasOpenPGPKeys);
-    if (cardHasOpenPGPKeys) {
-        mOpenPGPKeysWidget->update(card);
     }
 
     /* Check if additional keys could be available */

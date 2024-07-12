@@ -10,11 +10,15 @@
 
 #include <Libkleo/Predicates>
 
+#include <QHash>
 #include <QWidget>
 
 #include <set>
 #include <string>
 #include <vector>
+
+class QAction;
+class QToolButton;
 
 namespace GpgME
 {
@@ -24,39 +28,62 @@ class KeyListResult;
 
 namespace Kleo
 {
-class KeyTreeView;
 class ProgressOverlay;
+class TreeWidget;
 
 namespace SmartCard
 {
+enum class AppType;
 class Card;
+struct KeyPairInfo;
 }
 
 class CardKeysView : public QWidget
 {
     Q_OBJECT
 public:
-    explicit CardKeysView(QWidget *parent = nullptr);
+    enum Option {
+        // clang-format off
+        ShowSlotName = 0x0001, // show the slot name instead of the slot index
+        NoCreated    = 0x0002, // no "Created" column
+        // clang-format on
+    };
+    Q_DECLARE_FLAGS(Options, Option)
+
+    explicit CardKeysView(QWidget *parent, Options options);
     ~CardKeysView() override;
 
     void setCard(const SmartCard::Card *card);
 
+    std::string currentCardSlot() const;
+    GpgME::Key currentCertificate() const;
+
 private:
-    void loadCertificates();
+    void updateKeyList(const SmartCard::Card *card = nullptr);
+    void
+    insertTreeWidgetItem(const SmartCard::Card *card, int slotIndex, const SmartCard::KeyPairInfo &keyInfo, const GpgME::Subkey &subkey, int treeIndex = -1);
+    QToolButton *createActionsButton(const SmartCard::Card *card, const SmartCard::KeyPairInfo &keyInfo, const GpgME::Subkey &subkey);
     void ensureCertificatesAreValidated();
     void startCertificateValidation(const std::vector<GpgME::Key> &certificates);
     void certificateValidationDone(const GpgME::KeyListResult &result, const std::vector<GpgME::Key> &keys);
     void learnCard();
 
 private:
+    Options mOptions;
+
     std::string mSerialNumber;
     std::string mAppName;
-    std::vector<GpgME::Key> mCertificates;
+    Kleo::SmartCard::AppType mAppType;
+
+    std::vector<GpgME::Key> mCertificates; // only S/MIME certificates
 
     using KeySet = std::set<GpgME::Key, _detail::ByFingerprint<std::less>>;
     KeySet mValidatedCertificates;
 
-    KeyTreeView *mTreeView = nullptr;
+    TreeWidget *mTreeWidget = nullptr;
     ProgressOverlay *mTreeViewOverlay = nullptr;
+    QHash<std::string, QAction *> mActions;
 };
 } // namespace Kleo
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(Kleo::CardKeysView::Options)
